@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #ff0000;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .progress {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Downloader</h1>
+        <div class="form-group">
+            <input type="text" id="url" placeholder="ใส่ลิงค์ YouTube ที่นี่" required>
+        </div>
+        <button onclick="downloadVideo()">ดาวน์โหลด</button>
+        <div class="progress" id="progress">
+            กำลังดาวน์โหลด... <span id="percentage">0%</span>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function downloadVideo() {
+            const url = document.getElementById('url').value;
+            const status = document.getElementById('status');
+            const progress = document.getElementById('progress');
+            const percentage = document.getElementById('percentage');
+
+            if (!url) {
+                status.className = 'error';
+                status.textContent = 'กรุณาใส่ลิงค์ YouTube';
+                return;
+            }
+
+            status.textContent = '';
+            progress.style.display = 'block';
+            
+            fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                progress.style.display = 'none';
+                if (data.success) {
+                    status.className = 'success';
+                    status.textContent = data.message;
+                } else {
+                    status.className = 'error';
+                    status.textContent = data.error;
+                }
+            })
+            .catch(error => {
+                progress.style.display = 'none';
+                status.className = 'error';
+                status.textContent = 'เกิดข้อผิดพลาดในการดาวน์โหลด';
+            });
+        }
+    </script>
+</body>
+</html>
