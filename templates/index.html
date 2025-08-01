@@ -10,114 +10,74 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #ff0000;
             text-align: center;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        input[type="text"] {
+        input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin: 10px 0;
             font-size: 16px;
-            box-sizing: border-box;
         }
         button {
-            background-color: #ff0000;
-            color: white;
             padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
             font-size: 16px;
-            width: 100%;
+            cursor: pointer;
         }
-        button:hover {
-            background-color: #cc0000;
-        }
-        #status {
+        #progress {
             margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .progress {
             display: none;
+        }
+        #error {
+            color: red;
             margin-top: 20px;
-            text-align: center;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>YouTube Downloader</h1>
-        <div class="form-group">
-            <input type="text" id="url" placeholder="ใส่ลิงค์ YouTube ที่นี่" required>
-        </div>
-        <button onclick="downloadVideo()">ดาวน์โหลด</button>
-        <div class="progress" id="progress">
-            กำลังดาวน์โหลด... <span id="percentage">0%</span>
-        </div>
-        <div id="status"></div>
-    </div>
+    <h1>YouTube Downloader</h1>
+    <input type="text" id="urlInput" placeholder="กรุณาใส่ลิงค์ YouTube">
+    <button onclick="startDownload()">ดาวน์โหลด</button>
+    <p id="progress">กำลังดึงข้อมูล...</p>
+    <p id="error"></p>
 
     <script>
-        function downloadVideo() {
-            const url = document.getElementById('url').value;
-            const status = document.getElementById('status');
+        async function startDownload() {
+            const urlInput = document.getElementById('urlInput').value;
             const progress = document.getElementById('progress');
-            const percentage = document.getElementById('percentage');
+            const error = document.getElementById('error');
 
-            if (!url) {
-                status.className = 'error';
-                status.textContent = 'กรุณาใส่ลิงค์ YouTube';
-                return;
-            }
-
-            status.textContent = '';
             progress.style.display = 'block';
-            
-            fetch('/download', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url: url })
-            })
-            .then(response => response.json())
-            .then(data => {
-                progress.style.display = 'none';
-                if (data.success) {
-                    status.className = 'success';
-                    status.textContent = data.message;
+            error.style.display = 'none';
+            error.textContent = '';
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const link = document.createElement('a');
+                    link.href = result.video_url;
+                    link.download = result.title + '.mp4';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    progress.textContent = 'เริ่มดาวน์โหลดแล้ว!';
                 } else {
-                    status.className = 'error';
-                    status.textContent = data.error;
+                    throw new Error(result.error || 'เกิดข้อผิดพลาด');
                 }
-            })
-            .catch(error => {
+            } catch (err) {
+                error.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+                error.style.display = 'block';
                 progress.style.display = 'none';
-                status.className = 'error';
-                status.textContent = 'เกิดข้อผิดพลาดในการดาวน์โหลด';
-            });
+            }
         }
     </script>
 </body>

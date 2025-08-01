@@ -3,39 +3,38 @@ import os
 
 def download_youtube_video(url, output_path='downloads'):
     try:
-        # สร้างโฟลเดอร์สำหรับเก็บไฟล์ที่ดาวน์โหลด
+        # Create download folder if it doesn't exist
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        # กำหนดตัวเลือกสำหรับการดาวน์โหลด
+        # Define download options
         ydl_opts = {
-            'format': 'best[ext=mp4]',  # เลือกคุณภาพวิดีโอที่ดีที่สุดในรูปแบบ MP4
-            'outtmpl': f'{output_path}/%(title)s.%(ext)s',  # รูปแบบชื่อไฟล์
-            'progress_hooks': [lambda d: print(f"\rกำลังดาวน์โหลด: {d['_percent_str']}", end="")
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',  # Prefer MP4, fallback to best available
+            'outtmpl': f'{output_path}/%(title)s.%(ext)s',  # File name format
+            'progress_hooks': [lambda d: print(f"\rDownloading: {d['_percent_str']}", end="")
                              if d['status'] == 'downloading' else None],
         }
 
-        print("กำลังเริ่มดาวน์โหลด...")
-        
-        # ดาวน์โหลดวิดีโอ
+        print("Starting download...")
+
+        # Download video
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # ดึงข้อมูลวิดีโอ
+            # Extract video info
             info = ydl.extract_info(url, download=False)
             
-            # แสดงข้อมูลวิดีโอ
-            print(f"\nชื่อวิดีโอ: {info['title']}")
-            print(f"ความยาว: {info['duration']} วินาที")
+            # Display video info
+            print(f"\nVideo title: {info['title']}")
+            print(f"Duration: {info['duration']} seconds")
             
-            # ดาวน์โหลดวิดีโอ
+            # Download video
             ydl.download([url])
         
-        print(f"\nดาวน์โหลดเสร็จสิ้น! ไฟล์ถูกบันทึกที่: {output_path}")
+        print(f"\nDownload complete! File saved to: {output_path}")
         
     except Exception as e:
-        print(f"\nเกิดข้อผิดพลาด: {str(e)}")
-        print("กรุณาตรวจสอบว่า URL ถูกต้องและสามารถเข้าถึงได้")
+        print(f"\nError occurred: {str(e)}")
+        print("Please check if the URL is valid and accessible")
 
 if __name__ == "__main__":
-    # ตัวอย่างการใช้งาน
-    video_url = input("กรุณาใส่ลิงค์ YouTube: ")
+    video_url = input("Enter YouTube URL: ")
     download_youtube_video(video_url)
